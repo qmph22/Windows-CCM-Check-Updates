@@ -48,10 +48,6 @@ Description = ' ERROR '
 State = ' ERROR '})
 Continue
 }
-
-
-
-
 }
 
-$Updates
+$Updates | Out-GridView -Title "Updates"
