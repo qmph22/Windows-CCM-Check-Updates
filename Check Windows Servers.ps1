@@ -11,7 +11,7 @@ $Jobs = @()
 Write-Host "Checking servers: $Servers"
 Foreach ($Server in $Servers){
 #Begin seperate job for each server to reduce time spent running this entire script
-$Jobs += Start-Job -ScriptBlock {
+    $Job = Start-Job -Name $Server -ScriptBlock {
     #Check connection to $Using:Server with ICMP. $Using is to be able to send local variables to remote commands
     if (Test-Connection -ComputerName $Using:Server -Quiet -Count 2)
     {
@@ -101,23 +101,17 @@ $Jobs += Start-Job -ScriptBlock {
         Continue
     }
     }
+    $JobID = $Job.Id
+    Write-Host "Job started for $Server with Job ID $JobID"
+    $Jobs += $Job
 }
-        $Updates += New-Object PSObject -Property ([ordered]@{
-        n = 'ServerName'
-        e = 'TestServer'
-        ArticleID = ' TEST '
-        Publisher = ' TEST '
-        Software = ' TEST '
-        Description = ' TEST '
-        State = ' TEST '
-        CCMErrorCode = '0x12345678'})
 
 Write-Host 'Waiting for jobs to finish'
 #Wait for jobs to complete. Supress output
 Get-Job | Wait-Job | Out-Null
 
 #Add results of all jobs to $Updates and display
-$Updates += Receive-Job -Job $Jobs
-$Updates | Out-GridView -Title "Updates"
+$Updates += Receive-Job -Job $Jobs 
+$Updates | Select-Object -Property * -ExcludeProperty RunspaceId | Out-GridView -Title "Updates $((Get-Date).ToString())"
 
 Read-Host 'Script has ran sucessfully. Press Enter to exit'
