@@ -110,8 +110,17 @@ Write-Host 'Waiting for jobs to finish'
 #Wait for jobs to complete. Supress output
 Get-Job | Wait-Job | Out-Null
 
-#Add results of all jobs to $Updates and display
-$Updates += Receive-Job -Job $Jobs 
+#Add results of all jobs to $Updates and write errors to console
+$Updates += Receive-Job -Job $Jobs -Keep
+foreach($Job in $Jobs){
+    $JobServer = $Job.ChildJobs.output.e
+    $JobCheck = $Job.ChildJobs.output.State
+    if ($JobCheck -match 'ERROR'){
+    Write-Host "$JobCheck : $JobServer" -BackgroundColor Red
+    }
+} 
+
+#End of script. Output to GridView
 $Updates | Select-Object -Property * -ExcludeProperty RunspaceId | Out-GridView -Title "Updates $((Get-Date).ToString())"
 
 Read-Host 'Script has ran sucessfully. Press Enter to exit'
